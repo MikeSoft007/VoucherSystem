@@ -58,7 +58,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
+uri.txt
 app.db
 test.py
 logs

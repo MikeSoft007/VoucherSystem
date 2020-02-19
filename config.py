@@ -12,4 +12,4 @@ class Config(object):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb+srv://mikesoft:Emmanuel21@cluster0-lomxd.azure.mongodb.net/mike?retryWrites=true&w=majority'
+    MONGO_URI = os.environ.get('MONGO_URI')
