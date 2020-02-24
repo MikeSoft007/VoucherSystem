@@ -10,4 +10,4 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 mongo = PyMongo(app)
 
-from app import route, models, deactivate
+from app import route, models, deactivate, activate
