@@ -4,8 +4,18 @@ from app.models import Register, random_digits, twelve_digit_serial_no
 # database_serial_no
 
 
-@app.route('/generate', methods=['GET'])
+@app.route('/', methods=['GET'])
 def index():
+    return jsonify({
+        "Hello there!": '''Welcome to this route, I AM MICHAEL here with the given priviledges you can activate a Card  with the 
+                        endpoint </activate>  and </deactivate> to deactivate a card with the given category happy testing!'''
+    })
+
+
+
+
+@app.route('/generate', methods=['GET'])
+def generate():
     mongo_data = mongo.db.voucher
 
     # implemnting while loop to ensure that the random generated pin doesn't already exist in the database
