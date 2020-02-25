@@ -64,7 +64,7 @@ def deactivate_card():
                 }
             )
     else:
-        return jsonify({"Message": "cards already deactivated!"})
+        return jsonify({"Message": "card(s) already deactivated! or not yet assigned"})
 
 
 
