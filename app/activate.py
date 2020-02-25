@@ -1,12 +1,16 @@
 from flask import jsonify, request
 from app import app, mongo
+from app.audit import send_transaction
 
 
 @app.route('/activate', methods=['PUT'])
 def activate_card():
-    global serial, serial_number
+    global serial, serial_number, msg
     request_data = request.get_json()
+
+
     # get serial number from user and category to activate
+    # dealer_id = request_data['dealer_id']
     serial_no = request_data['serial_no']
     cat = request_data['category']
 
@@ -14,9 +18,13 @@ def activate_card():
     mongo_data = mongo.db.voucher
     find = mongo_data.find_one({'serial_no': serial_no})
 
-    # checking if serial number is valid
+    # checking if serial number and userID is valid
     if not find:
         return jsonify({'message': 'Invalid serial number'})
+
+    # finddealerID = mongo_data.find_one({'dealer_id': dealer_id})
+    # if not finddealerID:
+    #     return jsonify({"Message": "Dealer not found!"})
 
 
     if cat == 1:
@@ -30,7 +38,9 @@ def activate_card():
     elif cat == 0:
         serial = [serial_no]
     else:
-        return jsonify({"Message": "Enter valid category"})
+        msg =jsonify({"Message": "Enter valid category"})
+        return msg
+
 
     # collecting card details into voucher
     vouchers = []
@@ -48,23 +58,21 @@ def activate_card():
                 # con = mongo_data.find({"activation_status" : 0}).count()
 
             elif find1['dealer_id'] is None:
-                return jsonify({"Message":"Card(s) has not been assigned yet!"})
+                 msg = jsonify({"Message":"Card(s) has not been assigned yet!"})
+                 return msg
         else:
             break
 
     number = len(vouchers)
     if number > 0:
         if number == 1:
-            return jsonify(
-                {
-                    "Message": "{} card activated successfully".format(number) + ' ' + 'serial number {}'.format(vouchers[0]),
-                }
-            )
+             msg =  "{} card activated successfully".format(number) + ' ' + 'serial number {}'.format(vouchers[0])
+             send_transaction(cat,"Card activation", msg)
+             return jsonify({"Message": msg})
         else:
-            return jsonify(
-                {
-                    "Message": "{} cards has been activated from range {} to {}".format(number, vouchers[0], vouchers[-1])
-                }
-            )
+            msg = "{} cards has been activated from range {} to {}".format(number, vouchers[0], vouchers[-1])
+            send_transaction(cat, "Card activation", msg)
+            return jsonify({"Message": msg})
     else:
-        return jsonify({"Message": "card(s) already activated!"})
+        msg = jsonify({"Message": "card(s) already activated!"})
+        return msg

@@ -1,22 +1,29 @@
 from flask import jsonify, request
 from app import app, mongo
+from app.audit import send_transaction
 
 
 @app.route('/deactivate', methods=['PUT'])
 def deactivate_card():
-    global serial, serial_number
+    global serial, serial_number, msg
     request_data = request.get_json()
     # get serial number from user and category to deactivate
+    # userID = request_data['userID']
     serial_no = request_data['serial_no']
     cats = request_data['category']
 
     # create a mongo database instance to query
     mongo_data = mongo.db.voucher
     find = mongo_data.find_one({'serial_no': serial_no})
+    # finduserID = mongo_data.find_one({'userID': userID})
 
     # checking if serial number is valid
     if not find:
-        return jsonify({'message': 'Invalid serial number'})
+        msg =jsonify({'message': 'Invalid serial number'})
+        return msg
+
+    # if not finduserID:
+    #     return jsonify({"Message": "User not found!"})
 
 
     if cats == 1:
@@ -30,7 +37,8 @@ def deactivate_card():
     elif cats == 0:
         serial = [serial_no]
     else:
-        return jsonify({"Message": "Enter valid category"})
+        msg=jsonify({"Message": "Enter valid category"})
+        return msg
 
     # collecting card details into voucher
     vouchers = []
@@ -48,26 +56,24 @@ def deactivate_card():
                 # con = mongo_data.find({"activation_status" : 0}).count()
 
             elif find1['dealer_id'] is None:
-                return jsonify({"Message": "Card(s) has not been assigned yet!"})
+                msg = "Card(s) has not been assigned yet!"
+                return jsonify({"Message":msg})
         else:
             break
 
     number = len(vouchers)
     if number > 0:
         if number == 1:
-            return jsonify(
-                {
-                    "Message": "{} cards deactivated successfully".format(number) + ' ' + 'serial number {}'.format(vouchers[0]),
-                }
-            )
+            msg = "{} cards deactivated successfully".format(number) + ' ' + 'serial number {}'.format(vouchers[0])
+            send_transaction(cats, "Card deactivation", msg)
+            return jsonify({"Message": msg})
         else:
-            return jsonify(
-                {
-                    "Card Range": "{} cards has been deactivated from range {} to {}".format(number, vouchers[0], vouchers[-1])
-                }
-            )
+            msg = "{} cards has been deactivated from range {} to {}".format(number, vouchers[0], vouchers[-1])
+            send_transaction(cats, "Card Deactivation", msg)
+            return jsonify({"Message": msg})
     else:
-        return jsonify({"Message": "card(s) already deactivated!"})
+        msg = "card(s) already deactivated!"
+        return jsonify({"Message": msg})
 
 
 

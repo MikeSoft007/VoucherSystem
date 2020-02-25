@@ -1,5 +1,8 @@
-from app import app, db, mongo
+from app import app
 from flask import jsonify
+
+
+
 
 
 @app.route('/', methods=['GET'])
@@ -9,4 +12,3 @@ def index():
                    or cards with the endpoint (/activate)  and (/deactivate) to deactivate with the given category and 
                     card serial number HAPPY TESTING!'''
     })
-
