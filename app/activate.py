@@ -64,4 +64,4 @@ def activate_card():
                 }
             )
     else:
-        return jsonify({"Message": "cards already activated!"})
+        return jsonify({"Message": "card(s) already activated!"})
