@@ -1,7 +1,7 @@
 from app import app, db, mongo
 from flask import jsonify
-from app.models import Register, random_digits, twelve_digit_serial_no
-# database_serial_no
+from app.models import Register, random_digits
+
 
 
 @app.route('/', methods=['GET'])

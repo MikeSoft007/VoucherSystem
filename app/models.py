@@ -17,18 +17,18 @@ class Register(db.Model):
         return '{}'.format(self.pin)
 
 
-def random_digits(n):
-    """ A function to generate random 15 digit number. where n is the number of Digits"""
-    lower = 10**(n-1)
-    upper = 10**n - 1
-    return random.randint(lower, upper)
-
-
-def twelve_digit_serial_no(id):
-    """ The function create a 12 digit serial number from any number with less than 11 digits"""
-    f = str(10**(11 - len(str(id))))
-    twelve_digit_id = f + str(id)
-    return int(twelve_digit_id)
+# def random_digits(n):
+#     """ A function to generate random 15 digit number. where n is the number of Digits"""
+#     lower = 10**(n-1)
+#     upper = 10**n - 1
+#     return random.randint(lower, upper)
+#
+#
+# def twelve_digit_serial_no(id):
+#     """ The function create a 12 digit serial number from any number with less than 11 digits"""
+#     f = str(10**(11 - len(str(id))))
+#     twelve_digit_id = f + str(id)
+#     return int(twelve_digit_id)
 
 #
 #
