@@ -42,7 +42,7 @@ def generate():
     # sn = '%012d' % sn1
 
     # storing to mongo db
-    mongo_data.insert({'serial_no': sn, 'pin': pin1, 'activation_status': 0, 'dealer_id': None})
+    mongo_data.insert({'serial_no': sn, 'pin': pin1, 'activation_status': 0, 'dealer_id': 1234})
 
     return jsonify({'serial number': sn, 'PIN': pin1})
 

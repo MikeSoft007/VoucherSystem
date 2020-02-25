@@ -46,6 +46,9 @@ def activate_card():
 
                 vouchers.append(serial_number)
                 # con = mongo_data.find({"activation_status" : 0}).count()
+
+            elif find1['dealer_id'] is None:
+                return jsonify({"Message":"Card(s) has not been assigned yet!"})
         else:
             break
 
