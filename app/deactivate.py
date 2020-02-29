@@ -8,7 +8,7 @@ def deactivate_card():
     global serial, serial_number, msg
     request_data = request.get_json()
     # get serial number from user and category to deactivate
-    # userID = request_data['userID']
+
     serial_no = request_data['serial_no']
     cats = request_data['category']
 
@@ -21,10 +21,6 @@ def deactivate_card():
     if not find:
         msg =jsonify({'message': 'Invalid serial number'})
         return msg
-
-    # if not finduserID:
-    #     return jsonify({"Message": "User not found!"})
-
 
     if cats == 1:
         serial = list(range(serial_no, serial_no + 10))
@@ -46,7 +42,7 @@ def deactivate_card():
         # check for each serial number
         find1 = mongo_data.find_one({'serial_no': int(serial_number)})
         if find1:
-            if find1['activation_status'] == 1 and find1['dealer_id'] is not None:
+            if find1['activation_status'] == 1:
                 # deactivate card
                 mongo_data.update_one({'serial_no': int(serial_number)}, {"$set": {"activation_status": 0}})
 
@@ -55,8 +51,8 @@ def deactivate_card():
                 vouchers.append(serial_number)
                 # con = mongo_data.find({"activation_status" : 0}).count()
 
-            elif find1['dealer_id'] is None:
-                msg = "Card(s) has not been assigned yet!"
+            elif find1['activation_status'] == 0:
+                msg = "Card(s) has not been activated yet!"
                 return jsonify({"Message":msg})
         else:
             break
@@ -72,7 +68,7 @@ def deactivate_card():
             send_transaction(cats, "Card Deactivation", msg)
             return jsonify({"Message": msg})
     else:
-        msg = "card(s) already deactivated!"
+        msg = "card(s) already deactivated! to {}"
         return jsonify({"Message": msg})
 
 
