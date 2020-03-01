@@ -22,6 +22,11 @@ def deactivate_card():
         msg =jsonify({'message': 'Invalid serial number'})
         return msg
 
+    dealer_ids = mongo_data.find_one(
+        {"serial_no": serial_no},
+        {"dealer_id": 1, "_id": 0}
+    )
+
     if cats == 1:
         serial = list(range(serial_no, serial_no + 10))
     elif cats == 2:
@@ -60,7 +65,7 @@ def deactivate_card():
     number = len(vouchers)
     if number > 0:
         if number == 1:
-            msg = "{} cards deactivated successfully".format(number) + ' ' + 'serial number {}'.format(vouchers[0])
+            msg = "{} cards deactivated successfully".format(number) + ' ' + 'serial number {} from {}'.format(vouchers[0], dealer_ids)
             send_transaction(cats, "Card deactivation", msg)
             return jsonify({"Message": msg})
         else:
@@ -68,7 +73,7 @@ def deactivate_card():
             send_transaction(cats, "Card Deactivation", msg)
             return jsonify({"Message": msg})
     else:
-        msg = "card(s) already deactivated! to {}"
+        msg = "card(s) already deactivated! from {}".format(dealer_ids)
         return jsonify({"Message": msg})
 
 @app.errorhandler(404)
