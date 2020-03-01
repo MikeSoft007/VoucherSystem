@@ -14,15 +14,20 @@ def activate_card():
 
     serial_no = request_data['serial_no']
     cat = request_data['category']
+    batch = request_data['batch']
 
     # create a mongo database instance to query
 
     find = mongo_data.find_one({'serial_no': serial_no})
+    findbatch = mongo_data.find_one({'batch': batch})
 
 
     # checking if serial number and userID is valid
     if not find:
         return jsonify({'message': 'Invalid serial number'})
+
+    if not findbatch:
+        return jsonify({'message': 'Invalid batch number'})
 
     dealer_ids = mongo_data.find_one(
         {"serial_no":serial_no},
@@ -49,16 +54,17 @@ def activate_card():
     vouchers = []
     for serial_number in serial:
         # check for each serial number
-        find1 = mongo_data.find_one({'serial_no': int(serial_number)})
+        find1 = mongo_data.find_one({'serial_no': int(serial_number), 'batch': int(batch)})
         if find1:
-            if find1['activation_status'] == 0 and find1['dealer_id'] !='None':
-                # activate card
-                mongo_data.update_one({'serial_no': int(serial_number)}, {"$set": {"activation_status": 1}})
+            if find1['dealer_id'] !='None':
+                if find1['activation_status'] == 0:
+                    # activate card
+                    mongo_data.update_one({'serial_no': int(serial_number)}, {"$set": {"activation_status": 1}})
 
-                mongo_data.find_one({'serial_no': int(serial_number)})
+                    mongo_data.find_one({'serial_no': int(serial_number)})
 
-                vouchers.append(serial_number)
-                # con = mongo_data.find({"activation_status" : 0}).count()
+                    vouchers.append(serial_number)
+                    # con = mongo_data.find({"activation_status" : 0}).count()
 
             elif find1['dealer_id'] =='None':
                  msg = jsonify({"Message":"Card(s) has not been assigned yet!"})
