@@ -5,41 +5,6 @@ from app.models import User #Register, random_digits
 from passlib.apps import custom_app_context as pwd_context
 
 
-
-
-
-# @app.route('/generate', methods=['GET'])
-# def generate():
-#
-#     mongo_data = mongo.db.voucher
-#
-#     # implemnting while loop to ensure that the random generated pin doesn't already exist in the database
-#     counter = 1
-#     while counter >= 1:
-#         pin = random_digits(15)
-#         pin1 = mongo_data.find_one({'pin': pin})
-#
-#         if pin1:
-#             print('again')
-#             counter = counter + 1
-#         else:
-#             print(pin)
-#             break
-#
-#     save = Register(pin=str(pin))
-#     db.session.add(save)
-#     db.session.commit()
-#     serial_number = Register.query.filter_by(pin=str(pin)).first()
-#     pin1 = pin
-#     # sn = twelve_digit_serial_no(serial_number.s_n)
-#     sns = serial_number.s_n
-#     sn = '%012d' % sns
-#     # storing to mongo db
-#     mongo_data.insert({'serial_no': int(sn), 'pin': pin1, 'activation_status': 0, 'dealer_id':122445, 'batch':40})
-#
-#     return jsonify({'serial number': sn, 'PIN': pin1})
-#
-
 @app.route('/', methods=['GET'])
 def index():
     msg = "Welcome!, with this API you can activate or deactivate cards specifying the serial number and category (range) of the card(s) N.B: only assigned cards can be activated!!!, and only activated cards can be deactivated  <<HAPPY TESTING>>!"
@@ -90,6 +55,42 @@ def verify_password(username_or_token, password):
 def get_auth_token():
     token = g.user.generate_auth_token()
     return jsonify({'API_KEY': token.decode('ascii') })
+
+
+
+# @app.route('/generate', methods=['GET'])
+# def generate():
+#
+#     mongo_data = mongo.db.voucher
+#
+#     # implemnting while loop to ensure that the random generated pin doesn't already exist in the database
+#     counter = 1
+#     while counter >= 1:
+#         pin = random_digits(15)
+#         pin1 = mongo_data.find_one({'pin': pin})
+#
+#         if pin1:
+#             print('again')
+#             counter = counter + 1
+#         else:
+#             print(pin)
+#             break
+#
+#     save = Register(pin=str(pin))
+#     db.session.add(save)
+#     db.session.commit()
+#     serial_number = Register.query.filter_by(pin=str(pin)).first()
+#     pin1 = pin
+#     # sn = twelve_digit_serial_no(serial_number.s_n)
+#     sns = serial_number.s_n
+#     sn = '%012d' % sns
+#     # storing to mongo db
+#     mongo_data.insert({'serial_no': int(sn), 'pin': pin1, 'activation_status': 0, 'dealer_id':122445, 'batch':40})
+#
+#     return jsonify({'serial number': sn, 'PIN': pin1})
+#
+
+
 
 
 @app.errorhandler(400)
