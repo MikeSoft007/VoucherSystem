@@ -12,4 +12,4 @@ class Config(object):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://donjoe:praise1234@cluster0-shard-00-00-of0j7.azure.mongodb.net:27017,cluster0-shard-00-01-of0j7.azure.mongodb.net:27017,cluster0-shard-00-02-of0j7.azure.mongodb.net:27017/voucher?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority'
+    MONGO_URI = os.environ.get('MONGO_URI')
