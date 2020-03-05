@@ -92,6 +92,28 @@ def get_auth_token():
     return jsonify({'API_KEY': token.decode('ascii') })
 
 
+@app.errorhandler(400)
+def bad_request__error(error):
+    return jsonify(
+        {
+            "Message": "Sorry you entered wrong values kindly check and resend!"
+        },
+        {
+            "status":400
+        }
+    )
+
+
+@app.errorhandler(401)
+def internal_error(error):
+    return jsonify(
+        {
+            "Message": "Acess denied ! please register and login to generate API KEY"
+        },
+        {
+            "status": 401
+        }
+    )
 
 
 
@@ -107,27 +129,8 @@ def not_found_error(error):
     )
 
 
-@app.errorhandler(400)
-def bad_request__error(error):
-    return jsonify(
-        {
-            "Message": "Sorry you entered wrong values kindly check and resend!"
-        },
-        {
-            "status":400
-        }
-    )
 
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify(
-        {
-            "Message": "Sorry some errors has occured the administrator has been notified meanwhile kindly check if you specified all parameters accordinly"
-        },
-        {
-            "status": 500
-        }
-    )
+
 
 @app.errorhandler(405)
 def method_not_allowed(error):
