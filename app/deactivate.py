@@ -12,7 +12,7 @@ def deactivate_card():
     # get serial number from user and category to deactivate
 
     dealer_id = request_data['dealer_id']
-    serial_no = int(request_data['serial_no'])
+    serial_no = request_data['serial_no']
     cats = request_data['category']
     batch = request_data['batch']
 

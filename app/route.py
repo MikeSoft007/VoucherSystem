@@ -32,11 +32,6 @@ def new_user():
     mongo_data.insert({"username": username, "password":password})
     return jsonify({" Registered successful. username": user.username}), 201, {"Location": url_for('new_user', id = user.id, _external=True)}
 
-# @app.route('/api/resource')
-# @auth.login_required
-# def get_resource():
-#     return jsonify({'data': 'hello, %s!' % g.user.username})
-
 @auth.verify_password
 def verify_password(username_or_token, password):
     # first try to authenticate by token
@@ -89,8 +84,6 @@ def get_auth_token():
 #
 #     return jsonify({'serial number': sn, 'PIN': pin1})
 #
-
-
 
 
 @app.errorhandler(400)

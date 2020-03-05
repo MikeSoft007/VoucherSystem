@@ -3,7 +3,7 @@ from app import app, mongo, cur_time_and_date
 from app import auth
 
 @app.route('/activate', methods=['PUT'])
-@auth.login_required
+# @auth.login_required
 def activate_card():
     global serial, serial_number, msg
     request_data = request.get_json()
@@ -12,7 +12,7 @@ def activate_card():
 
     # get serial number from user and category to activate
     dealer_id = request_data['dealer_id']
-    serial_no = int(request_data['serial_no'])
+    serial_no = request_data['serial_no']
     cat = request_data['category']
     batch = request_data['batch']
 
