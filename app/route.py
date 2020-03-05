@@ -2,6 +2,11 @@ from app import app, db, mongo, auth
 from flask import jsonify, request, abort, url_for, g
 from app.models import User #Register, random_digits
 # , twelve_digit_serial_no
+from passlib.apps import custom_app_context as pwd_context
+
+
+
+
 
 # @app.route('/generate', methods=['GET'])
 # def generate():
@@ -47,7 +52,7 @@ def index():
 def new_user():
     mongo_data = mongo.db.users
     username = request.json.get('username')
-    password = request.json.get('password')
+    password = (request.json.get('password'))
     if username is None or password is None:
         abort(400) #missing arguements
     if User.query.filter_by(username = username).first() is not None:
@@ -57,6 +62,8 @@ def new_user():
     user.hash_password(password)
     db.session.add(user)
     db.session.commit()
+
+    password = pwd_context.encrypt(password)
     mongo_data.insert({"username": username, "password":password})
     return jsonify({" Registered successful. username": user.username}), 201, {"Location": url_for('new_user', id = user.id, _external=True)}
 

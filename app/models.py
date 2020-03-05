@@ -36,7 +36,6 @@ class User(db.Model):
         return user
 
 
-
 # class Register(db.Model):
 #     __tablename__ = 'register'
 #
