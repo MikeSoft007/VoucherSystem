@@ -1,90 +1,72 @@
 from app import app, db, mongo, auth
 from flask import jsonify, request, abort, url_for, g
-from app.models import User #Register, random_digits
-# , twelve_digit_serial_no
+from app.models import User
+# , Register, random_digits #, twelve_digit_serial_no
 from passlib.apps import custom_app_context as pwd_context
 
 
 @app.route('/', methods=['GET'])
 def index():
-    msg = " Hello Welcome!, First register and sign in to generate your API KEY as specified the the documentation, With this API you can activate or deactivate cards specifying the serial number and category (range) of the card(s) N.B: only assigned cards can be activated!!!, and only activated cards can be deactivated  <<HAPPY TESTING>>!"
-    return jsonify({"Message": msg})
+    try:
+        msg = " Hello Welcome!, First register and sign in to generate your API KEY as specified the the documentation, With this API you can activate or deactivate cards specifying the serial number and category (range) of the card(s) N.B: only assigned cards can be activated!!!, and only activated cards can be deactivated  <<HAPPY TESTING>>!"
+        return jsonify({"Message": msg})
+    except Exception:
+        abort(500)
 
 
 
 
 @app.route('/api/users', methods=['POST'])
 def new_user():
-    mongo_data = mongo.db.user
-    username = request.json.get('username')
-    password = (request.json.get('password'))
-    if username is None or password is None:
-        abort(400) #missing arguements
-    if User.query.filter_by(username = username).first() is not None:
-        abort(400) #existing user
+    try:
+        mongo_data = mongo.db.user
+        username = request.json.get('username')
+        password = (request.json.get('password'))
+        if not username or not password:
+            return jsonify({"Message": "Missing arguements"}), 400
+            # abort(400) #missing arguements
+        if User.query.filter_by(username = username).first() is not None:
+            return jsonify({"Message": "Username already exist"}), 400
+            # abort(400) #existing user
 
-    user = User(username=username)
-    user.hash_password(password)
-    db.session.add(user)
-    db.session.commit()
+        user = User(username=username)
+        user.hash_password(password)
+        db.session.add(user)
+        db.session.commit()
 
-    password = pwd_context.encrypt(password)
-    mongo_data.insert({"username": username, "password":password})
-    return jsonify({" Registered successful. username": user.username}), 201, {"Location": url_for('new_user', id = user.id, _external=True)}
+        password = pwd_context.encrypt(password)
+        mongo_data.insert({"username": username, "password":password})
+        return jsonify({" Registered successful. username": user.username}), 201, {"Location": url_for('new_user', id = user.id, _external=True)}
 
+    except Exception:
+        abort(500)
 
 @auth.verify_password
 def verify_password(username_or_token, password):
-    # first try to authenticate by token
-    user = User.verify_auth_token(username_or_token)
-    if not user:
-        # try to authenticate with username/password
-        user = User.query.filter_by(username = username_or_token).first()
-        if not user or not user.verify_password(password):
-            return False
-    g.user = user
-    return True
+    try:
+        # first try to authenticate by token
+        user = User.verify_auth_token(username_or_token)
+        if not user:
+            # try to authenticate with username/password
+            user = User.query.filter_by(username = username_or_token).first()
+            if not user or not user.verify_password(password):
+                return False
+        g.user = user
+        return True
+    except Exception:
+        abort(500)
 
 
 @app.route('/api/token')
 @auth.login_required
 def get_auth_token():
-    token = g.user.generate_auth_token()
-    return jsonify({'API_KEY': token.decode('ascii') })
+    try:
+        token = g.user.generate_auth_token()
+        return jsonify({'API_KEY': token.decode('ascii') })
+    except Exception:
+        abort(500)
 
 
-
-# @app.route('/generate', methods=['GET'])
-# def generate():
-#
-#     mongo_data = mongo.db.voucher
-#
-#     # implemnting while loop to ensure that the random generated pin doesn't already exist in the database
-#     counter = 1
-#     while counter >= 1:
-#         pin = random_digits(15)
-#         pin1 = mongo_data.find_one({'pin': pin})
-#
-#         if pin1:
-#             print('again')
-#             counter = counter + 1
-#         else:
-#             print(pin)
-#             break
-#
-#     save = Register(pin=str(pin))
-#     db.session.add(save)
-#     db.session.commit()
-#     serial_number = Register.query.filter_by(pin=str(pin)).first()
-#     pin1 = pin
-#     # sn = twelve_digit_serial_no(serial_number.s_n)
-#     sns = serial_number.s_n
-#     sn = '%012d' % sns
-#     # storing to mongo db
-#     mongo_data.insert({'serial_no': int(sn), 'pin': pin1, 'activation_status': 0, 'dealer_id':122445, 'batch':40})
-#
-#     return jsonify({'serial number': sn, 'PIN': pin1})
-#
 
 
 
@@ -136,5 +118,17 @@ def method_not_allowed(error):
         },
         {
             "status": 405
+        }
+    )
+
+
+@app.errorhandler(500)
+def method_not_allowed(error):
+    return jsonify(
+        {
+            "Message": "Bad request sent to server kindly check and resend!"
+        },
+        {
+            "status": 500
         }
     )

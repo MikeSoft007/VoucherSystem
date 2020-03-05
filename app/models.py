@@ -1,6 +1,6 @@
 from app import db, app
-# from datetime import datetime
-# import random
+from datetime import datetime
+import random
 from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
 from passlib.apps import custom_app_context as pwd_context
 

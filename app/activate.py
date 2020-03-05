@@ -5,103 +5,114 @@ from app import auth
 @app.route('/activate', methods=['PUT'])
 @auth.login_required
 def activate_card():
-    global serial, serial_number, msg
-    request_data = request.get_json()
-    mongo_data = mongo.db.voucher
-    logs = mongo.db.act_logs
+    try:
+        global serial, serial_number, msg
+        request_data = request.get_json()
+        mongo_data = mongo.db.voucher
+        logs = mongo.db.act_logs
 
-    # get serial number from user and category to activate
-    dealer_id = request_data['dealer_id']
-    serial_no = request_data['serial_no']
-    cat = request_data['category']
-    batch = request_data['batch']
+        # get serial number from user and category to activate
+        dealer_id = request_data['dealer_id']
+        serial_no = request_data['serial_no']
+        cat = request_data['category']
+        batch = request_data['batch']
+        # if not dealer_id or not serial_no or not cat or not batch:
+        #     return jsonify({"Message": "Missing arguements, please provide all"})
+        # create a mongo database instance to query
 
-    # create a mongo database instance to query
-
-    find = mongo_data.find_one({'serial_no': serial_no})
-    findbatch = mongo_data.find_one({'batch': batch})
-    finddealer = mongo_data.find_one({'dealer_id': dealer_id})
-
-
-    # checking if serial number and userID is valid
-    if not finddealer:
-        return jsonify({'message': 'Invalid dealer ID'})
-
-    if not find:
-        return jsonify({'message': 'Invalid serial number'})
-
-    if not findbatch:
-        return jsonify({'message': 'Invalid batch number'})
+        find = mongo_data.find_one({'serial_no': serial_no})
+        findbatch = mongo_data.find_one({'batch': batch})
+        finddealer = mongo_data.find_one({'dealer_id': dealer_id})
 
 
+        # checking if serial number and userID is valid
+        if not finddealer:
+            return jsonify({'message': 'Invalid dealer ID'})
 
-    dealer_ids = mongo_data.find_one(
-        {"serial_no":serial_no},
-        {"dealer_id":1, "_id":0}
-    )
+        if not find:
+            return jsonify({'message': 'Invalid serial number'})
 
-
-    if cat == 1:
-        serial = list(range(serial_no, serial_no + 10))
-    elif cat == 2:
-        serial = list(range(serial_no, serial_no + 100))
-    elif cat == 3:
-        serial = list(range(serial_no, serial_no + 1000))
-    elif cat == 4:
-        serial = list(range(serial_no, serial_no + 10000))
-    elif cat == 0:
-        serial = [serial_no]
-    else:
-        msg =jsonify({"Message": "Enter valid category 0 for single card 1=10 cards, 2 = 100 cards, 3 = 1000 cards, 4 = 10000 cards"})
-        return msg
+        if not findbatch:
+            return jsonify({'message': 'Invalid batch number'})
 
 
-    # collecting card details into voucher
-    vouchers = []
-    for serial_number in serial:
-        # check for each serial number
-        find1 = mongo_data.find_one({'serial_no': int(serial_number), 'batch': int(batch)})
-        if find1:
-            if find1['dealer_id'] !='None':
-                if find1['activation_status'] == 0:
-                    # activate card
-                    mongo_data.update_one({'serial_no': int(serial_number)}, {"$set": {"activation_status": 1}})
 
-                    mongo_data.find_one({'serial_no': int(serial_number)})
-                    logs.insert(
-                        {
-                            "daelerID": dealer_id,
-                            "serial_number": serial_number,
-                            "batch": batch,
-                            "status": "Activatted",
-                            "to": dealer_ids,
-                            "date": cur_time_and_date()
-                        }
-                    )
-                    vouchers.append(serial_number)
-                    # con = mongo_data.find({"activation_status" : 0}).count()
+        dealer_ids = mongo_data.find_one(
+            {"serial_no":serial_no},
+            {"dealer_id":1, "_id":0}
+        )
 
-            elif find1['dealer_id'] =='None':
-                 msg = jsonify({"Message":"Card(s) has not been assigned yet!"})
-                 return msg
+
+        if cat == 1:
+            serial = list(range(serial_no, serial_no + 10))
+        elif cat == 2:
+            serial = list(range(serial_no, serial_no + 100))
+        elif cat == 3:
+            serial = list(range(serial_no, serial_no + 1000))
+        elif cat == 4:
+            serial = list(range(serial_no, serial_no + 10000))
+        elif cat == 0:
+            serial = [serial_no]
         else:
-            break
+            msg =jsonify({"Message": "Enter valid category 0 for single card 1=10 cards, 2 = 100 cards, 3 = 1000 cards, 4 = 10000 cards"})
+            return msg
 
-    number = len(vouchers)
-    if number > 0:
-        if number == 1:
-             msg =  "{} card activated successfully".format(number) + ' ' + 'serial number {}'.format(vouchers[0])
-             return jsonify({"Message": msg})
+
+        # collecting card details into voucher
+        vouchers = []
+        numbers = len(serial)
+        for serial_number in serial:
+            # check for each serial number
+            find1 = mongo_data.find_one({'serial_no': int(serial_number), 'batch': int(batch)})
+            if find1:
+                if find1['dealer_id'] !='None':
+                    if find1['activation_status'] == 0:
+                        # activate card
+                        mongo_data.update_one({'serial_no': int(serial_number)}, {"$set": {"activation_status": 1}})
+
+                        mongo_data.find_one({'serial_no': int(serial_number)})
+                        logs.insert(
+                            {
+                                "daelerID": dealer_id,
+                                "serial_number": serial_number,
+                                "batch": batch,
+                                "status": "Activatted",
+                                "to": dealer_ids,
+                                "date": cur_time_and_date()
+                            }
+                        )
+                        vouchers.append(serial_number)
+                    elif numbers == 1:
+                        return jsonify({"Message": "Card has not been assigned yet"})
+                        # con = mongo_data.find({"activation_status" : 0}).count()
+
+                elif numbers ==1:
+                    return jsonify({"Message": "card has already been activated"})
+                # elif find1['dealer_id'] =='None':
+                #     msg = jsonify({"Message":"Card(s) has not been assigned yet!"})
+                #     return msg
+            else:
+                # return jsonify({"Message": "No card to activate within the specified category from the serial number!"})
+                break
+
+        number = len(vouchers)
+        if number > 0:
+            if number == 1:
+                msg = "{} card activated successfully".format(number) + ' ' + 'serial number {}'.format(vouchers[0])
+                return jsonify({"Message": msg})
+            else:
+                msg = "{} cards has been activated from range {} to {}".format(number, vouchers[0], vouchers[-1])
+                return jsonify({"Message": msg})
         else:
-            msg = "{} cards has been activated from range {} to {}".format(number, vouchers[0], vouchers[-1])
-            return jsonify({"Message": msg})
-    else:
-        msg ="card(s) already activated! to Merchant with {}".format(dealer_ids)
-        return jsonify({'Message': msg})
+            msg ="card(s) already activated! to Merchant with {}".format(dealer_ids)
+            return jsonify({'Message': msg})
 
+    except Exception:
+
+        abort(500)
 
 @app.errorhandler(400)
-def bad_request__error(error):
+def bad_request__error(exception):
     return jsonify(
         {
             "Message": "Sorry you entered wrong values kindly check and resend!"
@@ -148,5 +159,16 @@ def method_not_allowed(error):
         },
         {
             "status": 405
+        }
+    )
+
+@app.errorhandler(500)
+def method_not_allowed(error):
+    return jsonify(
+        {
+            "Message": "Bad request please check your input and resend !"
+        },
+        {
+            "status": 500
         }
     )
