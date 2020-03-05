@@ -1,18 +1,18 @@
-from flask import jsonify, request
-from app import app, mongo
-from app.audit import send_transaction
-
-
+from flask import jsonify, request, abort
+from app import app, mongo, cur_time_and_date
+from app import auth
 
 @app.route('/activate', methods=['PUT'])
+@auth.login_required
 def activate_card():
     global serial, serial_number, msg
     request_data = request.get_json()
     mongo_data = mongo.db.voucher
+    logs = mongo.db.act_logs
 
     # get serial number from user and category to activate
-
-    serial_no = request_data['serial_no']
+    dealer_id = request_data['dealer_id']
+    serial_no = int(request_data['serial_no'])
     cat = request_data['category']
     batch = request_data['batch']
 
@@ -20,14 +20,20 @@ def activate_card():
 
     find = mongo_data.find_one({'serial_no': serial_no})
     findbatch = mongo_data.find_one({'batch': batch})
+    finddealer = mongo_data.find_one({'dealer_id': dealer_id})
 
 
     # checking if serial number and userID is valid
+    if not finddealer:
+        return jsonify({'message': 'Invalid dealer ID'})
+
     if not find:
         return jsonify({'message': 'Invalid serial number'})
 
     if not findbatch:
         return jsonify({'message': 'Invalid batch number'})
+
+
 
     dealer_ids = mongo_data.find_one(
         {"serial_no":serial_no},
@@ -46,7 +52,7 @@ def activate_card():
     elif cat == 0:
         serial = [serial_no]
     else:
-        msg =jsonify({"Message": "Enter valid category"})
+        msg =jsonify({"Message": "Enter valid category 0 for single card 1=10 cards, 2 = 100 cards, 3 = 1000 cards, 4 = 10000 cards"})
         return msg
 
 
@@ -62,7 +68,16 @@ def activate_card():
                     mongo_data.update_one({'serial_no': int(serial_number)}, {"$set": {"activation_status": 1}})
 
                     mongo_data.find_one({'serial_no': int(serial_number)})
-
+                    logs.insert(
+                        {
+                            "daelerID": dealer_id,
+                            "serial_number": serial_number,
+                            "batch": batch,
+                            "status": "Activatted",
+                            "to": dealer_ids,
+                            "date": cur_time_and_date()
+                        }
+                    )
                     vouchers.append(serial_number)
                     # con = mongo_data.find({"activation_status" : 0}).count()
 
@@ -76,11 +91,9 @@ def activate_card():
     if number > 0:
         if number == 1:
              msg =  "{} card activated successfully".format(number) + ' ' + 'serial number {}'.format(vouchers[0])
-             send_transaction(cat,"Card activation", msg)
              return jsonify({"Message": msg})
         else:
             msg = "{} cards has been activated from range {} to {}".format(number, vouchers[0], vouchers[-1])
-            send_transaction(cat, "Card Activation", msg)
             return jsonify({"Message": msg})
     else:
         msg ="card(s) already activated! to Merchant with {}".format(dealer_ids)
@@ -96,10 +109,6 @@ def not_found_error(error):
 def bad_request__error(error):
     return jsonify({"Message": "Sorry you entered wrong values kindly check and resend!"}), 400
 
-@app.errorhandler(500)
-def internal_error(error):
-    mongo.session.rollback()
-    return jsonify({"Message": "Sorry some errors has occured the administrator has been notified"}), 500
 
 @app.errorhandler(405)
 def method_not_allowed(error):

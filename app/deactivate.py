@@ -1,26 +1,40 @@
 from flask import jsonify, request
-from app import app, mongo
-from app.audit import send_transaction
+from app import app, mongo, cur_time_and_date
+from app import auth
+
 
 
 @app.route('/deactivate', methods=['PUT'])
+@auth.login_required
 def deactivate_card():
     global serial, serial_number, msg
     request_data = request.get_json()
     # get serial number from user and category to deactivate
 
-    serial_no = request_data['serial_no']
+    dealer_id = request_data['dealer_id']
+    serial_no = int(request_data['serial_no'])
     cats = request_data['category']
+    batch = request_data['batch']
 
     # create a mongo database instance to query
     mongo_data = mongo.db.voucher
+    logs = mongo.db.act_logs
     find = mongo_data.find_one({'serial_no': serial_no})
+    findbatch = mongo_data.find_one({'batch': batch})
+    finddealer = mongo_data.find_one({'dealer_id': dealer_id})
     # finduserID = mongo_data.find_one({'userID': userID})
 
     # checking if serial number is valid
+    if not finddealer:
+        return jsonify({'message': 'Invalid dealer ID'})
+
     if not find:
-        msg =jsonify({'message': 'Invalid serial number'})
-        return msg
+        return jsonify({'message': 'Invalid serial number'})
+
+    if not findbatch:
+        return jsonify({'message': 'Invalid batch number'})
+
+
 
     dealer_ids = mongo_data.find_one(
         {"serial_no": serial_no},
@@ -38,7 +52,7 @@ def deactivate_card():
     elif cats == 0:
         serial = [serial_no]
     else:
-        msg=jsonify({"Message": "Enter valid category"})
+        msg = jsonify({"Message": "Enter valid category 0 for single card 1=10 cards, 2 = 100 cards, 3 = 1000 cards, 4 = 10000 cards"})
         return msg
 
     # collecting card details into voucher
@@ -52,7 +66,16 @@ def deactivate_card():
                 mongo_data.update_one({'serial_no': int(serial_number)}, {"$set": {"activation_status": 0}})
 
                 mongo_data.find_one({'serial_no': int(serial_number)})
-
+                logs.insert(
+                    {
+                        "daelerID": dealer_id,
+                        "serial_number": serial_number,
+                        "batch": batch,
+                        "status": "Deactivated",
+                        "from": dealer_ids,
+                        "date": cur_time_and_date()
+                    }
+                )
                 vouchers.append(serial_number)
                 # con = mongo_data.find({"activation_status" : 0}).count()
 
@@ -66,12 +89,15 @@ def deactivate_card():
     if number > 0:
         if number == 1:
             msg = "{} cards deactivated successfully".format(number) + ' ' + 'serial number {} from {}'.format(vouchers[0], dealer_ids)
-            send_transaction(cats, "Card deactivation", msg)
+
             return jsonify({"Message": msg})
         else:
-            msg = "{} cards has been deactivated from range {} to {}".format(number, vouchers[0], vouchers[-1])
-            send_transaction(cats, "Card Deactivation", msg)
-            return jsonify({"Message": msg})
+            msg = "{} cards has been deactivated, range {} to {} from Merchant with {}".format(number, vouchers[0], vouchers[-1], dealer_ids)
+            return jsonify(
+                {
+                    "Message": msg
+                }
+            )
     else:
         msg = "card(s) already deactivated! from {}".format(dealer_ids)
         return jsonify({"Message": msg})
