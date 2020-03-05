@@ -35,7 +35,8 @@ class User(db.Model):
         user = User.query.get(data['id'])
         return user
 
-
+with app.app_context():
+    db.create_all()
 
 # class Register(db.Model):
 #     __tablename__ = 'register'
