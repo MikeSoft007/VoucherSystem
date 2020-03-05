@@ -15,7 +15,7 @@ def index():
 
 @app.route('/api/users', methods=['POST'])
 def new_user():
-    mongo_data = mongo.db.users
+    mongo_data = mongo.db.user
     username = request.json.get('username')
     password = (request.json.get('password'))
     if username is None or password is None:
