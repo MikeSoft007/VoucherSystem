@@ -3,7 +3,7 @@ from app import app, mongo, cur_time_and_date
 from app import auth
 
 @app.route('/activate', methods=['PUT'])
-# @auth.login_required
+@auth.login_required
 def activate_card():
     global serial, serial_number, msg
     request_data = request.get_json()

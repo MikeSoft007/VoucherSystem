@@ -1,6 +1,6 @@
 from app import db, app
-from datetime import datetime
-import random
+# from datetime import datetime
+# import random
 from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
 from passlib.apps import custom_app_context as pwd_context
 
@@ -34,6 +34,7 @@ class User(db.Model):
             return None  # invalid token
         user = User.query.get(data['id'])
         return user
+
 
 
 # class Register(db.Model):
